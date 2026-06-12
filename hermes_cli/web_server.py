@@ -1786,6 +1786,101 @@ async def get_system_stats():
 
 
 # ---------------------------------------------------------------------------
+# Usage / Cost Tracking — token usage, costs, per-session breakdown.
+# ---------------------------------------------------------------------------
+
+
+@app.get("/api/usage/summary")
+async def get_usage_summary():
+    """Get token usage and cost summary across all sessions.
+
+    Returns aggregate token counts, estimated costs, per-model breakdown,
+    and per-session usage for the last 24 hours. Powers the Usage dashboard.
+    """
+    try:
+        from hermes_state import SessionDB
+        from hermes_cli import profiles as profiles_mod
+        from agent.usage_pricing import estimate_session_cost
+        from datetime import datetime, timezone, timedelta
+
+        now = datetime.now(timezone.utc)
+        day_ago = now - timedelta(hours=24)
+
+        total_input = 0
+        total_output = 0
+        total_cost = 0.0
+        model_breakdown: Dict[str, Dict[str, Any]] = {}
+        session_usage = []
+
+        try:
+            infos = profiles_mod.list_profiles()
+            targets = [(info.name, info.path) for info in infos]
+        except Exception:
+            targets = [("default", profiles_mod.get_profile_dir("default"))]
+
+        for name, home in targets:
+            db_path = Path(home) / "state.db"
+            if not db_path.exists():
+                continue
+            try:
+                db = SessionDB(db_path=db_path, read_only=True)
+            except Exception:
+                continue
+            try:
+                sessions = db.list_sessions_rich(limit=100, offset=0)
+                for s in sessions:
+                    session_input = s.get("input_tokens", 0) or 0
+                    session_output = s.get("output_tokens", 0) or 0
+                    session_model = s.get("model", "unknown")
+                    session_cost = s.get("estimated_cost", 0.0) or 0.0
+
+                    total_input += session_input
+                    total_output += session_output
+                    total_cost += session_cost
+
+                    # Model breakdown
+                    if session_model not in model_breakdown:
+                        model_breakdown[session_model] = {
+                            "input_tokens": 0,
+                            "output_tokens": 0,
+                            "cost": 0.0,
+                            "sessions": 0,
+                        }
+                    model_breakdown[session_model]["input_tokens"] += session_input
+                    model_breakdown[session_model]["output_tokens"] += session_output
+                    model_breakdown[session_model]["cost"] += session_cost
+                    model_breakdown[session_model]["sessions"] += 1
+
+                    # Per-session (last 20)
+                    if len(session_usage) < 20:
+                        session_usage.append({
+                            "id": s.get("id", ""),
+                            "title": s.get("title", "Untitled"),
+                            "model": session_model,
+                            "input_tokens": session_input,
+                            "output_tokens": session_output,
+                            "cost": session_cost,
+                            "profile": name,
+                            "last_active": s.get("last_active", s.get("started_at", "")),
+                        })
+            finally:
+                db.close()
+
+        return {
+            "period": "24h",
+            "total_input_tokens": total_input,
+            "total_output_tokens": total_output,
+            "total_tokens": total_input + total_output,
+            "total_cost_usd": round(total_cost, 4),
+            "model_breakdown": model_breakdown,
+            "sessions": session_usage,
+            "generated_at": now.isoformat(),
+        }
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Usage summary failed: {exc}")
+
+
+# ---------------------------------------------------------------------------
 # Health Monitor endpoints — crash detection, auto-recovery, gateway health.
 # ---------------------------------------------------------------------------
 
@@ -1870,6 +1965,76 @@ async def reset_health_monitor():
         return {"ok": True, "message": "Health monitor state reset"}
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Reset failed: {exc}")
+
+
+# ---------------------------------------------------------------------------
+# Plugin Permissions — security dashboard + approval workflow.
+# ---------------------------------------------------------------------------
+
+
+@app.get("/api/plugins/permissions")
+async def get_plugin_permissions():
+    """Get permissions report for all installed plugins.
+
+    Returns each plugin's declared permissions, dangerous permissions,
+    and whether it's enabled/approved. Powers the Plugin Security dashboard.
+    """
+    try:
+        from plugins.permissions import get_plugin_permissions_report
+        from hermes_cli.config import load_config, get_hermes_home
+
+        config = load_config()
+        plugins_dir = get_hermes_home() / "plugins"
+        report = get_plugin_permissions_report(config, plugins_dir)
+        return {"plugins": report}
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Plugin permissions check failed: {exc}")
+
+
+@app.post("/api/plugins/approve/{plugin_name}")
+async def approve_plugin(plugin_name: str):
+    """Approve a plugin's dangerous permissions.
+
+    Adds the plugin to plugins.approved in config.yaml, allowing it to
+    use dangerous permissions (file.system, file.write, tools.delegate, etc.)
+    """
+    try:
+        from hermes_cli.config import load_config, save_config
+
+        config = load_config()
+        plugins_cfg = config.get("plugins", {})
+        approved = list(plugins_cfg.get("approved", []))
+
+        if plugin_name not in approved:
+            approved.append(plugin_name)
+            plugins_cfg["approved"] = approved
+            config["plugins"] = plugins_cfg
+            save_config(config)
+
+        return {"ok": True, "message": f"Plugin '{plugin_name}' approved"}
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Approval failed: {exc}")
+
+
+@app.delete("/api/plugins/approve/{plugin_name}")
+async def revoke_plugin_approval(plugin_name: str):
+    """Revoke a plugin's dangerous permission approval."""
+    try:
+        from hermes_cli.config import load_config, save_config
+
+        config = load_config()
+        plugins_cfg = config.get("plugins", {})
+        approved = list(plugins_cfg.get("approved", []))
+
+        if plugin_name in approved:
+            approved.remove(plugin_name)
+            plugins_cfg["approved"] = approved
+            config["plugins"] = plugins_cfg
+            save_config(config)
+
+        return {"ok": True, "message": f"Plugin '{plugin_name}' approval revoked"}
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Revoke failed: {exc}")
 
 
 # ---------------------------------------------------------------------------

@@ -15939,8 +15939,32 @@ async def start_gateway(config: Optional[GatewayConfig] = None, replace: bool = 
             logging.getLogger().setLevel(_stderr_level)
 
     runner = GatewayRunner(config)
-    
-    # Track whether an unexpected signal initiated the shutdown. When an
+
+    # ── Health Monitor ──────────────────────────────────────────────────
+    # Start the health monitor watchdog if enabled. Monitors the gateway
+    # process for crash loops and can trigger auto-recovery.
+    _health_monitor = None
+    try:
+        from health_monitor import HealthMonitor, HealthConfig
+        from hermes_cli.config import get_hermes_home
+
+        _health_config = HealthConfig(
+            check_interval=float(os.getenv("HERMES_HEALTH_CHECK_INTERVAL", "30")),
+            flap_threshold=int(os.getenv("HERMES_HEALTH_FLAP_THRESHOLD", "3")),
+            flap_window=float(os.getenv("HERMES_HEALTH_FLAP_WINDOW", "300")),
+            auto_restart=os.getenv("HERMES_HEALTH_AUTO_RESTART", "true").lower() == "true",
+        )
+        _health_monitor = HealthMonitor(
+            config=_health_config,
+            state_dir=Path(get_hermes_home()) / "health",
+        )
+        _health_monitor.start()
+        logger.info("Health monitor started (interval=%.1fs, flap_threshold=%d)",
+                     _health_config.check_interval, _health_config.flap_threshold)
+    except Exception as _health_exc:
+        logger.debug("Health monitor not started: %s", _health_exc)
+
+    # Track whether an unexpected signal initiated the shutdown.
     # unexpected SIGTERM kills the gateway, we exit non-zero so service
     # managers can revive the process. Planned stop paths write a marker
     # before signalling us so they can exit cleanly instead.
@@ -16174,6 +16198,14 @@ async def start_gateway(config: Optional[GatewayConfig] = None, replace: bool = 
     # Stop cron ticker cleanly
     cron_stop.set()
     cron_thread.join(timeout=5)
+
+    # Stop health monitor
+    if _health_monitor is not None:
+        try:
+            _health_monitor.stop()
+            logger.info("Health monitor stopped")
+        except Exception as _hm_stop_exc:
+            logger.debug("Health monitor stop error: %s", _hm_stop_exc)
 
     # Stop the planned-stop watcher (daemon=True so this is belt-and-suspenders).
     _planned_stop_watcher_stop.set()
