@@ -602,6 +602,15 @@ def run_conversation(
                 repaired_seq,
                 agent.session_id or "-",
             )
+        # Clamp _last_flushed_db_idx to the post-compaction length.
+        # repair_message_sequence() merges consecutive users in-place,
+        # shrinking messages.  A stale _last_flushed_db_idx (from the
+        # previous turn or a mid-turn early-persist) would overshoot the
+        # compacted list and skip the assistant/tool chain entirely from
+        # persistence — causing orphan user blobs to accumulate in the DB.
+        # Fixes #44837 (root cause layer 3).
+        if agent._last_flushed_db_idx > len(messages):
+            agent._last_flushed_db_idx = len(messages)
 
         api_messages = []
         for idx, msg in enumerate(messages):

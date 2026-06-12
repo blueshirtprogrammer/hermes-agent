@@ -1561,6 +1561,12 @@ class AIAgent:
                 self._ensure_db_session()
             start_idx = len(conversation_history) if conversation_history else 0
             flush_from = max(start_idx, self._last_flushed_db_idx)
+            # Defensive overshoot clamp: if repair_message_sequence compacted
+            # messages between the last flush and now, flush_from can exceed
+            # len(messages).  Fall back to writing everything so no assistant/
+            # tool rows are silently skipped.  Fixes #44837 (root cause layer 4).
+            if flush_from >= len(messages):
+                flush_from = start_idx
             for msg in messages[flush_from:]:
                 role = msg.get("role", "unknown")
                 content = msg.get("content")
