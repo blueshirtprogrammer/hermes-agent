@@ -1588,14 +1588,25 @@ def run_job(job: dict) -> tuple[bool, str, str, Optional[str]]:
                 with open(_cfg_path, encoding="utf-8") as _f:
                     _cfg = yaml.safe_load(_f) or {}
                 _cfg = _expand_env_vars(_cfg)
-                _model_cfg = _cfg.get("model", {})
-                if not job.get("model"):
-                    if isinstance(_model_cfg, str):
-                        model = _model_cfg
-                    elif isinstance(_model_cfg, dict):
-                        model = _model_cfg.get("default", model)
+                # Resolve model from config using the same logic as runtime_provider.
+                # This ensures consistency: cron jobs use the same model resolution
+                # as interactive sessions, including the "model" alias for "default"
+                # and local model auto-detection. (#43899)
+                if not model:
+                    from hermes_cli.runtime_provider import _get_model_config as _resolve_model_cfg
+                    _model_cfg = _resolve_model_cfg()
+                    model = (_model_cfg.get("default") or "").strip()
         except Exception as e:
             logger.warning("Job '%s': failed to load config.yaml, using defaults: %s", job_id, e)
+
+        # Validate model is resolved. Give a clear error instead of letting
+        # AIAAgent fail downstream with "Model parameter is required".
+        if not model:
+            raise RuntimeError(
+                f"Cron job '{job_name}' ({job_id}) has no model configured. "
+                f"Set model in the cron job, set HERMES_MODEL env var, or "
+                f"configure model.default in config.yaml."
+            )
 
         # Apply IPv4 preference if configured.
         try:
@@ -2045,48 +2056,101 @@ def tick(verbose: bool = True, adapters=None, loop=None, sync: bool = True) -> i
             )
 
         def _process_job(job: dict) -> bool:
-            """Run one due job end-to-end: execute, save, deliver, mark."""
-            try:
-                success, output, final_response, error = run_job(job)
+            """Run one due job end-to-end: execute, save, deliver, mark.
 
-                output_file = save_job_output(job["id"], output)
-                if verbose:
-                    logger.info("Output saved to: %s", output_file)
+            On failure, retries up to job['max_retries'] times with exponential
+            backoff (job['retry_delay_seconds'] * 2^attempt). Retry state is
+            persisted in the job record so surviving retries survive a gateway
+            restart. (#43899)
+            """
+            max_retries = job.get("max_retries", 0)
+            retry_delay = job.get("retry_delay_seconds", 30.0)
+            retry_count = job.get("retry_count", 0)
+            from cron.jobs import update_job_retry_state as _update_job_retry_state
 
-                # Deliver the final response to the origin/target chat.
-                # If the agent responded with [SILENT], skip delivery (but
-                # output is already saved above).  Failed jobs always deliver.
-                deliver_content = final_response if success else f"⚠️ Cron job '{job.get('name', job['id'])}' failed:\n{error}"
-                # Treat whitespace-only final responses the same as empty
-                # responses: do not deliver a blank message, and let the
-                # empty-response guard below mark the run as a soft failure.
-                should_deliver = bool(deliver_content.strip())
-                if should_deliver and success and SILENT_MARKER in deliver_content.strip().upper():
-                    logger.info("Job '%s': agent returned %s — skipping delivery", job["id"], SILENT_MARKER)
-                    should_deliver = False
+            for attempt in range(max_retries + 1):
+                if attempt > 0:
+                    # Exponential backoff: delay * 2^(attempt-1)
+                    delay = retry_delay * (2 ** (attempt - 1))
+                    logger.info(
+                        "Job '%s': retry %d/%d after %.1fs delay",
+                        job["id"], attempt, max_retries, delay,
+                    )
+                    import time as _time
+                    _time.sleep(delay)
 
-                delivery_error = None
-                if should_deliver:
-                    try:
-                        delivery_error = _deliver_result(job, deliver_content, adapters=adapters, loop=loop)
-                    except Exception as de:
-                        delivery_error = str(de)
-                        logger.error("Delivery failed for job %s: %s", job["id"], de)
+                    # Re-read job from disk in case it was disabled/paused
+                    _fresh = get_job(job["id"])
+                    if _fresh and not _fresh.get("enabled", False):
+                        logger.info("Job '%s': disabled during retry — skipping", job["id"])
+                        return False
+                    if _fresh and _fresh.get("state") == "paused":
+                        logger.info("Job '%s': paused during retry — skipping", job["id"])
+                        return False
 
-                # Treat empty final_response as a soft failure so last_status
-                # is not "ok" — the agent ran but produced nothing useful.
-                # (issue #8585)
-                if success and not final_response.strip():
-                    success = False
-                    error = "Agent completed but produced empty response (model error, timeout, or misconfiguration)"
+                try:
+                    success, output, final_response, error = run_job(job)
 
-                mark_job_run(job["id"], success, error, delivery_error=delivery_error)
-                return True
+                    output_file = save_job_output(job["id"], output)
+                    if verbose:
+                        logger.info("Output saved to: %s", output_file)
 
-            except Exception as e:
-                logger.error("Error processing job %s: %s", job['id'], e)
-                mark_job_run(job["id"], False, str(e))
-                return False
+                    deliver_content = final_response if success else f"⚠️ Cron job '{job.get('name', job['id'])}' failed:\n{error}"
+                    should_deliver = bool(deliver_content.strip())
+                    if should_deliver and success and SILENT_MARKER in deliver_content.strip().upper():
+                        logger.info("Job '%s': agent returned %s — skipping delivery", job["id"], SILENT_MARKER)
+                        should_deliver = False
+
+                    delivery_error = None
+                    if should_deliver:
+                        try:
+                            delivery_error = _deliver_result(job, deliver_content, adapters=adapters, loop=loop)
+                        except Exception as de:
+                            delivery_error = str(de)
+                            logger.error("Delivery failed for job %s: %s", job["id"], de)
+
+                    if success and not final_response.strip():
+                        success = False
+                        error = "Agent completed but produced empty response (model error, timeout, or misconfiguration)"
+
+                    if success:
+                        # Success — reset retry count and mark
+                        if retry_count > 0:
+                            logger.info("Job '%s': succeeded on retry %d/%d", job["id"], attempt, max_retries)
+                        mark_job_run(job["id"], True, None, delivery_error=delivery_error)
+                        return True
+
+                    # Failed — decide whether to retry
+                    retry_count += 1
+                    if attempt < max_retries:
+                        logger.warning(
+                            "Job '%s': failed (attempt %d/%d), will retry: %s",
+                            job["id"], attempt + 1, max_retries + 1, error,
+                        )
+                        # Persist retry state
+                        _update_job_retry_state(job["id"], retry_count, retry_delay * (2 ** attempt))
+                    else:
+                        # Exhausted retries
+                        logger.error(
+                            "Job '%s': failed after %d attempts (no more retries): %s",
+                            job["id"], max_retries + 1, error,
+                        )
+                        mark_job_run(job["id"], False, error, delivery_error=delivery_error)
+                        # Reset retry count for next scheduled run
+                        _update_job_retry_state(job["id"], 0, None)
+                        return False
+
+                except Exception as e:
+                    logger.error("Error processing job %s: %s", job["id"], e)
+                    retry_count += 1
+                    if attempt < max_retries:
+                        _update_job_retry_state(job["id"], retry_count, retry_delay * (2 ** attempt))
+                    else:
+                        mark_job_run(job["id"], False, str(e))
+                        _update_job_retry_state(job["id"], 0, None)
+                        return False
+
+            return False
 
         # Partition due jobs: those with a per-job workdir mutate
         # os.environ["TERMINAL_CWD"] inside run_job, which is process-global —

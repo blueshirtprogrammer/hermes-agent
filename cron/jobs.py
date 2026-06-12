@@ -537,6 +537,8 @@ def create_job(
     enabled_toolsets: Optional[List[str]] = None,
     workdir: Optional[str] = None,
     no_agent: bool = False,
+    max_retries: Optional[int] = None,
+    retry_delay_seconds: Optional[float] = None,
 ) -> Dict[str, Any]:
     """
     Create a new cron job.
@@ -663,6 +665,11 @@ def create_job(
         "last_status": None,
         "last_error": None,
         "last_delivery_error": None,
+        # Retry configuration (#43899)
+        "max_retries": max_retries if max_retries is not None and max_retries > 0 else 0,
+        "retry_delay_seconds": retry_delay_seconds if retry_delay_seconds is not None and retry_delay_seconds > 0 else 30.0,
+        "retry_count": 0,
+        "retry_at": None,
         # Delivery configuration
         "deliver": deliver,
         "origin": origin,  # Tracks where job was created for "origin" delivery
@@ -820,6 +827,24 @@ def resume_job(job_id: str) -> Optional[Dict[str, Any]]:
             "paused_at": None,
             "paused_reason": None,
             "next_run_at": next_run_at,
+        },
+    )
+
+
+def update_job_retry_state(
+    job_id: str, retry_count: int, retry_at: Optional[float]
+) -> Optional[Dict[str, Any]]:
+    """Persist retry state for a cron job.
+
+    Called by the scheduler after each failed attempt so that retry
+    progress survives gateway restarts. Resets retry_count to 0 when
+    retry_at is None (success or exhausted). (#43899)
+    """
+    return update_job(
+        job_id,
+        {
+            "retry_count": retry_count,
+            "retry_at": datetime.now(timezone.utc).isoformat() if retry_at else None,
         },
     )
 
