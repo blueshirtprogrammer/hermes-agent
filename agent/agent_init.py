@@ -19,6 +19,7 @@ preserved.
 
 from __future__ import annotations
 
+import copy
 import logging
 import os
 import re
@@ -1491,7 +1492,9 @@ def init_agent(
                 from hermes_cli.plugins import get_plugin_context_engine
                 _candidate = get_plugin_context_engine()
                 if _candidate and _candidate.name == _engine_name:
-                    _selected_engine = _candidate
+                    # Clone so the child's update_model() cannot mutate the
+                    # parent's shared singleton.  Fixes #42449.
+                    _selected_engine = copy.deepcopy(_candidate)
             except Exception:
                 pass
 
