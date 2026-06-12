@@ -51,6 +51,7 @@ import {
   ARTIFACTS_ROUTE,
   COMMAND_CENTER_ROUTE,
   CRON_ROUTE,
+  DASHBOARD_ROUTE,
   MESSAGING_ROUTE,
   NEW_CHAT_ROUTE,
   PROFILES_ROUTE,
@@ -331,6 +332,7 @@ export function CommandPalette() {
             run: go(CRON_ROUTE)
           },
           { action: 'nav.profiles', icon: Users, id: 'nav-profiles', label: t.profiles.title, run: go(PROFILES_ROUTE) },
+          { action: 'nav.dashboard', icon: BarChart3, id: 'nav-dashboard', label: 'Dashboard', keywords: ['health', 'usage', 'stats', 'overview'], run: go(DASHBOARD_ROUTE) },
           { action: 'nav.agents', icon: Cpu, id: 'nav-agents', label: t.agents.title, run: go(AGENTS_ROUTE) }
         ]
       },

@@ -53,7 +53,7 @@ import {
 } from '@/store/updates'
 import type { StatusResponse } from '@/types/hermes'
 
-import { CRON_ROUTE } from '../../routes'
+import { CRON_ROUTE, DASHBOARD_ROUTE } from '../../routes'
 import type { StatusbarItem, StatusbarSelectModifiers } from '../statusbar-controls'
 
 interface StatusbarItemsOptions {
@@ -348,6 +348,14 @@ export function useStatusbarItems({
         label: copy.agents,
         onSelect: openAgents,
         title: agentsOpen ? copy.closeAgents : copy.openAgents,
+        variant: 'action'
+      },
+      {
+        icon: <Activity className="size-3" />,
+        id: 'dashboard',
+        label: 'Dashboard',
+        title: 'Open Dashboard',
+        to: DASHBOARD_ROUTE,
         variant: 'action'
       },
       {
