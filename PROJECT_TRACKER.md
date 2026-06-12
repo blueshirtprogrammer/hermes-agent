@@ -1,198 +1,289 @@
 # HERMES AGENT FORK — PROJECT TRACKER
-## Comprehensive Issue/PR Sweep & Roadmap
-Generated: 2026-06-13
+## Real Data from Full Sweep (2026-06-13)
 
 ---
 
-## 📊 BIG PICTURE
+## 📊 ACTUAL NUMBERS (Authenticated API Sweep)
 
-| Category | Count | % of Total |
-|----------|-------|------------|
-| Open Issues | 852 | 28% |
-| Open PRs | 2000 | 67% |
-| Total Items | 3000 | 100% |
-| Bugs | 811 | 27% |
-| Features | 748 | 25% |
-| Desktop-related | 782 | 26% |
-| Security | 521 | 17% |
-
----
-
-## 🎯 DEPARTMENT STRUCTURE (Dogfooding Teams Integration)
-
-We'll organize the work into **departments**, each with **teams**, each with **agents**:
-
-### DEPT 1: GATEWAY & INFRASTRUCTURE (280 issues, 710 PRs)
-**Mission:** Gateway stability, crash recovery, platform connections
-
-| Team | Issues | PRs | Priority |
-|------|--------|-----|----------|
-| Gateway Core | ~120 | ~300 | P0 — Crashes take down everything |
-| Platform Connectors | ~80 | ~200 | P1 — WhatsApp, Telegram, Discord |
-| systemd/macOS Launch | ~40 | ~100 | P1 — Service management |
-| Auth & Security | ~40 | ~110 | P0 — Token refresh, permissions |
-
-### DEPT 2: AGENT & REASONING (215 issues, 586 PRs)
-**Mission:** Agent loop, context, memory, tool execution
-
-| Team | Issues | PRs | Priority |
-|------|--------|-----|----------|
-| Agent Loop | ~80 | ~200 | P0 — Compression, crashes |
-| Memory System | ~40 | ~80 | P1 — Drift guard, sync |
-| Tool Execution | ~50 | ~150 | P1 — Terminal, browser, MCP |
-| Context Engine | ~45 | ~156 | P0 — Message loss |
-
-### DEPT 3: DESKTOP APP (265 issues, 354 PRs)
-**Mission:** Electron app, UI/UX, dashboard
-
-| Team | Issues | PRs | Priority |
-|------|--------|-----|----------|
-| Desktop Core | ~100 | ~150 | P0 — Path issues, install |
-| Dashboard/Health | ~50 | ~80 | P1 — NEW: We built this |
-| Plugin System | ~65 | ~74 | P0 — Security sandbox |
-| UI/UX Polish | ~50 | ~50 | P2 — Visual refinements |
-
-### DEPT 4: CRON & SCHEDULING (8 issues, 24 PRs)
-**Mission:** Reliable job execution, retries, monitoring
-
-| Team | Issues | PRs | Priority |
-|------|--------|-----|----------|
-| Cron Core | 5 | 15 | P0 — Model resolution, billing |
-| Cron Retries | 3 | 9 | P1 — NEW: We built this |
-
-### DEPT 5: CONFIG & PROFILES (30 issues, 79 PRs)
-**Mission:** Configuration system, profiles, settings
-
-| Team | Issues | PRs | Priority |
-|------|--------|-----|----------|
-| Config System | 20 | 50 | P1 — Path mismatches |
-| Profiles | 10 | 29 | P1 — Multi-profile |
+| Category | Count |
+|----------|-------|
+| **Open Issues** | 1,499 |
+| **Open PRs** | 3,501 |
+| **P1 (High Priority)** | 56 |
+| **P2 (Medium)** | 473 |
+| **P3 (Low)** | 970 |
+| **Bugs** | 971 |
+| **Features** | 447 |
+| **Security** | 37 |
+| **Docs** | 11 |
 
 ---
 
-## 🔥 TOP 30 ISSUES BY SEVERITY (Already Extracted)
+## 🏢 DEPARTMENT STRUCTURE
 
-**ALREADY FIXED (in our fork):**
-- ✅ #43466 — Delegate subagent toolset stripping
-- ✅ #43899 — Cron model parameter resolution
-- ✅ #44585 — Cron retry with exponential backoff
+### DEPT 1: GATEWAY & INFRASTRUCTURE
+**Owner:** Gateway Lead  
+**Scope:** Gateway core, messaging platforms, auth, security
 
-**P0 — CRITICAL (Gateway crashes, security):**
-1. #33365 — WhatsApp gateway crashes on first poll after existing bridge
-2. #43083 — Secret redaction breaks second tool call
-3. #29092 — Two-profile SIGTERM flap loop
-4. #31486 — TUI freezes, stdin unresponsive
-5. #33913 — Double-.hermes path mismatch in Docker
-6. #44710 — Auth token refresh uses wrong domain
-7. #27564 — Gateway unconditionally interrupts during clarify
-8. #42126 — systemd gateway exits 1 after platforms connect
-9. #44727 — Quick commands bypass admin restrictions [SECURITY]
-10. #43719 — Malicious third-party plugins [SECURITY]
+| Metric | Count |
+|--------|-------|
+| Total Issues | 476 |
+| P1 | 31 |
+| P2 | 193 |
+| P3 | 252 |
+| Bugs | 335 |
+| Features | 114 |
+| Security | 16 |
+| PRs | 1,251 |
 
-**P1 — HIGH (Platform, desktop, config):**
-11. #42524 — macOS 26 launchctl exit 5
-12. #42909 — Telegram DMs produce zero log output
-13. #42203 — macOS background processes silently fail
-14. #44731 — Browser private-network policy bypass [SECURITY]
-15. #43025 — API key exposure in terminal output [SECURITY]
-16. #16700 — redact_secrets breaks Bitwarden CLI
-17. #43842 — macOS plist refresh bootout
-18. #42875 — Memory drift guard rejects valid writes
-19. #43066 — Context compression loses assistant messages
-20. #42197 — Cron jobs fail with 'Model parameter is required'
+**Teams:**
+- Platform Connectors (Telegram, WhatsApp, Discord, Matrix)
+- Service Management (systemd, launchd, Windows service)
+- Auth & Security (OAuth, token refresh, permission system)
+- Gateway Core (SIGTERM flap, crash loops, message routing)
 
-**P2 — MEDIUM (Features, improvements):**
-21-30. Various feature requests and improvements
+### DEPT 2: AGENT & REASONING
+**Owner:** Agent Lead  
+**Scope:** Agent loop, tools, memory, context, compression
+
+| Metric | Count |
+|--------|-------|
+| Total Issues | 700 |
+| P1 | 21 |
+| P2 | 211 |
+| P3 | 468 |
+| Bugs | 427 |
+| Features | 240 |
+| Security | 11 |
+| PRs | 1,384 |
+
+**Teams:**
+- Agent Loop (context, compression, tool execution)
+- Memory System (drift guard, sync, persistence)
+- Tools (terminal, browser, MCP, file operations)
+- Delegate System (context corruption, security)
+
+### DEPT 3: DESKTOP APP
+**Owner:** Desktop Lead  
+**Scope:** Electron app, UI/UX, dashboard, plugin system
+
+| Metric | Count |
+|--------|-------|
+| Total Issues | 265 |
+| P1 | 4 |
+| P2 | 54 |
+| P3 | 207 |
+| Bugs | 176 |
+| Features | 75 |
+| Security | 8 |
+| PRs | 523 |
+
+**Teams:**
+- Desktop Core (path issues, installers, updates)
+- UI/UX (command palette, dashboard, activity stream)
+- Plugin System (marketplace, permissions, sandbox)
+- Integration (desktop-backend communication)
+
+### DEPT 4: CRON & SCHEDULING
+**Owner:** Cron Lead  
+**Scope:** Job scheduling, retries, monitoring, webhooks
+
+| Metric | Count |
+|--------|-------|
+| Total Issues | 6 |
+| P1 | 0 |
+| P2 | 2 |
+| P3 | 4 |
+| Bugs | 2 |
+| Features | 4 |
+| Security | 0 |
+| PRs | 26 |
+
+### DEPT 5: CONFIG & PROFILES
+**Owner:** Config Lead  
+**Scope:** Configuration system, profile management, env vars
+
+| Metric | Count |
+|--------|-------|
+| Total Issues | 34 |
+| P1 | 0 |
+| P2 | 11 |
+| P3 | 23 |
+| Bugs | 21 |
+| Features | 10 |
+| Security | 2 |
+| PRs | 104 |
 
 ---
 
-## 📋 ROADMAP — ONE SWEEP EXECUTION PLAN
+## 🎯 TOP 56 P1 ISSUES BY PRIORITY
 
-### PHASE 1: STABILIZE (Week 1) — "Stop the Bleeding"
-**Goal:** All P0 crashes and security issues fixed
+### HIGHEST PRIORITY (Security + Data Loss)
 
-| # | Issue | Department | Team | Effort | Status |
-|---|-------|------------|------|--------|--------|
-| 1 | #44727 Quick commands bypass admin | Gateway | Security | 2h | TODO |
-| 2 | #43719 Malicious plugins | Desktop | Plugin Security | 4h | IN PROGRESS |
-| 3 | #33365 WhatsApp crash | Gateway | Platforms | 4h | TODO |
-| 4 | #29092 SIGTERM flap loop | Gateway | Core | 3h | TODO |
-| 5 | #31486 TUI freeze | Gateway | Core | 4h | TODO |
-| 6 | #44710 Auth token refresh URL | Gateway | Auth | 1h | TODO |
-| 7 | #27564 Clarify interrupt | Gateway | Core | 3h | TODO |
-| 8 | #42126 systemd crash-loop | Gateway | Core | 3h | TODO |
-| 9 | #43083 Secret redaction bug | Agent | Loop | 2h | TODO |
-| 10 | #33913 Docker path mismatch | Desktop | Core | 2h | TODO |
+**SECURITY (Must Fix Today):**
+1. #44727 - Quick commands bypass admin restrictions [SECURITY]
+2. #44731 - Browser private-network policy bypass [SECURITY]
+3. #43025 - redact_secrets not preventing API key exposure [SECURITY]
+4. #43719 - Malicious third-party plugins targeting dashboards [SECURITY]
+5. #43466 - delegate_task doesn't strip messaging/cronjob toolsets [SECURITY] ✓ ALREADY FIXED
 
-### PHASE 2: SECURE (Week 2) — "Lock It Down"
-**Goal:** All security issues fixed, plugin system hardened
+**DATA LOSS (Must Fix Today):**
+6. #44837 - Session DB turn-end flush drops assistant messages
+7. #43066 - Context compaction loses assistant messages
+8. #42449 - delegate_task corrupts parent context_length
 
-| # | Issue | Department | Team | Effort | Status |
-|---|-------|------------|------|--------|--------|
-| 11 | #44731 Browser policy bypass | Agent | Tools | 3h | TODO |
-| 12 | #43025 API key exposure | Gateway | Security | 2h | TODO |
-| 13 | #16700 redact_secrets + Bitwarden | Agent | Config | 2h | TODO |
-| 14 | #44710 Auth token refresh | Gateway | Auth | 1h | TODO |
+**CRON BILLING (Must Fix Today):**
+9. #44585 - Cron inherits paid provider state during pause/stop
+10. #43899 - Cron jobs fail 'Model parameter is required' ✓ ALREADY FIXED
 
-### PHASE 3: POLISH (Week 3) — "Make It Sing"
-**Goal:** Desktop app features, UI/UX, developer experience
+### HIGH PRIORITY (Functionality)
 
-| # | Issue | Department | Team | Effort | Status |
-|---|-------|------------|------|--------|--------|
-| 15 | Dashboard view | Desktop | Dashboard | 8h | DONE |
-| 16 | Plugin Marketplace UI | Desktop | Plugins | 8h | DONE |
-| 17 | Health Monitor | Infra | Monitoring | 6h | DONE |
-| 18 | Cron retry system | Cron | Core | 4h | DONE |
-| 19 | Usage/Cost API | Infra | API | 3h | DONE |
+11. #44037 - fd-recycle corruption in memory_store.db
+12. #43842 - macOS plist refresh kills CLI before bootstrap
+13. #43083 - Secret redaction breaks second tool call
+14. #42909 - Telegram DMs produce zero log output
+15. #42524 - macOS 26 launchctl exit 5 fallback
+16. #44679 - Matrix gateway treats DM as group
+17. #42875 - memory drift guard rejects valid writes
+18. #42874 - memory refuses legitimate appends
+19. #42810 - OpenAI compatible endpoint fails
+20. #44710 - Auth token refresh uses wrong domain
+21. #43014 - cron deliver=origin fails in CLI
+22. #39714 - hermes update installs to wrong venv
+23. #39455 - nix-lockfile-fix can't commit hash update
+24. #38026 - sync_back writes to host skill dirs
 
 ---
 
-## 🤖 DOGFOODING: HOW WE'LL USE OUR OWN TEAMS INTEGRATION
+## 🚀 EXECUTION PLAN
 
-### The OWL Alpha Workflow:
-1. **Project Manager Agent** — Reads this tracker, assigns work
-2. **Department Leads** — One per department, reviews priorities
-3. **Team Agents** — Each team has agents that:
-   - Fetch issue details from GitHub
-   - Read relevant code
-   - Implement fixes
-   - Write tests
-   - Create PRs
-4. **QA Agent** — Reviews each PR, runs tests
-5. **Integration Agent** — Merges approved PRs
+### PHASE 1: SECURITY & DATA LOSS (Week 1)
+Fix all security issues + data loss bugs.
 
-### Running the Sweep:
-```bash
-# Each department lead spawns their teams
-hermes task --agent "Dept1-Gateway-Lead" --prompt "
-  You are the Gateway Department Lead.
-  Read PROJECT_TRACKER.md Phase 1 issues.
-  For each issue:
-    1. Fetch full issue details
-    2. Identify root cause
-    3. Spawn a team agent to fix it
-    4. Review the fix
-    5. Create PR to fork
-  Report progress to Project Manager.
-"
+| # | Issue | Dept | Team | Status |
+|---|-------|------|------|--------|
+| 1 | #44727 Quick commands bypass | Gateway | Auth | TODO |
+| 2 | #44731 Browser policy bypass | Agent | Tools | TODO |
+| 3 | #43025 API key exposure | Gateway | Auth | TODO |
+| 4 | #43719 Malicious plugins | Agent | Security | TODO |
+| 5 | #43466 delegate_task | Agent | Security | ✅ DONE |
+| 6 | #44837 Session DB flush | Gateway | Core | TODO |
+| 7 | #43066 Context compaction | Agent | Loop | TODO |
+| 8 | #42449 delegate context | Agent | Delegate | TODO |
+| 9 | #44585 Cron billing | Agent | Cron | TODO |
+| 10 | #43899 Cron model | Cron | Core | ✅ DONE |
+
+### PHASE 2: PLATFORM STABILITY (Week 2)
+Fix all platform connectivity issues.
+
+| # | Issue | Dept | Platform |
+|---|-------|------|----------|
+| 11 | #44037 fd-recycle corruption | Gateway | Memory |
+| 12 | #43842 macOS plist | Gateway | macOS |
+| 13 | #42909 Telegram DM | Gateway | Telegram |
+| 14 | #42524 launchctl exit 5 | Gateway | macOS |
+| 15 | #44679 Matrix DM | Gateway | Matrix |
+| 16 | #44710 Auth domain | Desktop | Auth |
+
+### PHASE 3: TOOL CHAIN (Week 3)
+Fix all tool-related issues.
+
+| # | Issue | Dept | Tool |
+|---|-------|------|------|
+| 17 | #42875 memory drift | Agent | Memory |
+| 18 | #42874 memory appends | Agent | Memory |
+| 19 | #42810 OpenAI endpoint | Agent | API |
+| 20 | #43014 cron deliver | Cron | Cron |
+| 21 | #39714 venv path | Desktop | CLI |
+| 22 | #39455 nix lockfile | Desktop | Nix |
+| 23 | #38026 sync_back | Agent | File Sync |
+
+---
+
+## 🤖 AGENT TEAM STRUCTURE
+
+```
+OWL ALPHA (Project Manager)
+│
+├── DEPT 1: Gateway Lead
+│   ├── Platform Team (3 agents)
+│   │   ├── Telegram Specialist
+│   │   ├── WhatsApp Specialist
+│   │   └── Matrix Specialist
+│   ├── Service Team (2 agents)
+│   │   ├── systemd Specialist
+│   │   └── macOS Specialist
+│   └── Auth Team (2 agents)
+│       ├── OAuth Specialist
+│       └── Security Specialist
+│
+├── DEPT 2: Agent Lead
+│   ├── Loop Team (2 agents)
+│   │   ├── Context Specialist
+│   │   └── Compression Specialist
+│   ├── Memory Team (2 agents)
+│   │   ├── Persistence Specialist
+│   │   └── Sync Specialist
+│   ├── Tools Team (3 agents)
+│   │   ├── Terminal Specialist
+│   │   ├── Browser Specialist
+│   │   └── MCP Specialist
+│   └── Delegate Team (2 agents)
+│       ├── Context Isolation Specialist
+│       └── Security Specialist
+│
+├── DEPT 3: Desktop Lead
+│   ├── Core Team (2 agents)
+│   │   ├── Installer Specialist
+│   │   └── Path Specialist
+│   ├── UI/UX Team (3 agents)
+│   │   ├── Dashboard Specialist
+│   │   ├── Command Palette Specialist
+│   │   └── Activity Stream Specialist
+│   └── Plugin Team (2 agents)
+│       ├── Marketplace Specialist
+│       └── Sandbox Specialist
+│
+├── DEPT 4: Cron Lead
+│   └── Cron Team (2 agents)
+│       ├── Scheduler Specialist
+│       └── Retry Specialist
+│
+├── DEPT 5: Config Lead
+│   └── Config Team (2 agents)
+│       ├── Profile Specialist
+│       └── Environment Specialist
+│
+├── QA TEAM (4 agents)
+│   ├── Security QA (reviews all security fixes)
+│   ├── Integration QA (tests cross-dept changes)
+│   ├── Performance QA (benchmarks before/after)
+│   └── Regression QA (runs full test suite)
+│
+└── INTEGRATION TEAM (2 agents)
+    ├── Merge Agent (creates and merges PRs)
+    └── Release Agent (tags releases, updates changelog)
 ```
 
 ---
 
-## 📈 METRICS TO TRACK
+## 📈 METRICS TRACKING
 
+Daily standup reports:
 - Issues resolved per day
-- PRs merged
+- PRs created and merged
 - Test pass rate
-- Time to resolution per department
 - Security issues remaining
-- Crash-related issues remaining
+- P1 issues remaining
+- Time to resolution
 
 ---
 
-## 🚀 NEXT ACTIONS
+## 🔧 WORKFLOW
 
-1. **Start Phase 1** — Fix P0 crash and security issues
-2. **Set up agent teams** — Use delegate_task to spawn department leads
-3. **Monitor progress** — Dashboard view shows health of the fork itself
-4. **Iterate** — Daily standup agent reviews what was done, plans next
+1. **PM Agent** reads this tracker, assigns work to department leads
+2. **Department Leads** spawn specialist agents per issue
+3. **Specialists** fix issues, write tests, create PRs
+4. **QA Agents** review each PR
+5. **Integration Agent** merges approved PRs
+6. **Daily report** generated and displayed in Dashboard view

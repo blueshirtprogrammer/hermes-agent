@@ -1,0 +1,502 @@
+{
+  "generated_at": "2026-06-13T00:20:35+00:00",
+  "summary": {
+    "total_open_issues": 1499,
+    "total_open_prs": 3501,
+    "severity_breakdown": {
+      "P3": 970,
+      "P2": 473,
+      "P1": 56
+    },
+    "type_breakdown": {
+      "unknown": 33,
+      "feature": 447,
+      "bug": 971,
+      "security": 37,
+      "docs": 11
+    },
+    "area_breakdown_issues": {
+      "gateway": 467,
+      "agent": 686,
+      "desktop": 263,
+      "config": 34,
+      "session": 4,
+      "auth": 8,
+      "tools": 10,
+      "unknown": 18,
+      "cron": 6,
+      "plugins": 2,
+      "security": 1
+    },
+    "area_breakdown_prs": {
+      "gateway": 1251,
+      "agent": 1384,
+      "desktop": 523,
+      "auth": 45,
+      "session": 20,
+      "tools": 59,
+      "unknown": 69,
+      "config": 104,
+      "cron": 26,
+      "security": 15,
+      "plugins": 5
+    }
+  },
+  "departments": {
+    "DEPT 1: GATEWAY & INFRASTRUCTURE": {
+      "total_issues": 476,
+      "p0_critical": 0,
+      "p1_high": 31,
+      "p2_medium": 193,
+      "p3_low": 252,
+      "bugs": 335,
+      "features": 114,
+      "security": 16,
+      "top_p0_issues": [],
+      "top_p1_issues": [
+        {
+          "number": 44837,
+          "title": "Session DB turn-end flush drops assistant after repair_message_sequence compacts list (orphan user \u2192",
+          "url": "https://github.com/NousResearch/hermes-agent/issues/44837",
+          "labels": [
+            "type/bug",
+            "comp/agent",
+            "comp/gateway",
+            "P1"
+          ],
+          "severity": "P1",
+          "type": "bug",
+          "created_at": "2026-06-12T10:32:47Z",
+          "updated_at": "2026-06-12T11:00:48Z",
+          "comments": 1
+        },
+        {
+          "number": 44727,
+          "title": "[Security] Hermes gateway quick commands bypass admin-only slash command restrictions",
+          "url": "https://github.com/NousResearch/hermes-agent/issues/44727",
+          "labels": [
+            "type/security",
+            "comp/gateway",
+            "P1"
+          ],
+          "severity": "P1",
+          "type": "security",
+          "created_at": "2026-06-12T07:14:50Z",
+          "updated_at": "2026-06-12T11:11:59Z",
+          "comments": 1
+        },
+        {
+          "number": 44679,
+          "title": "[Bug]: matrix gateway treats DM room as group and requires mention",
+          "url": "https://github.com/NousResearch/hermes-agent/issues/44679",
+          "labels": [
+            "type/bug",
+            "comp/gateway",
+            "platform/matrix",
+            "P1"
+          ],
+          "severity": "P1",
+          "type": "bug",
+          "created_at": "2026-06-12T05:31:50Z",
+          "updated_at": "2026-06-12T13:19:46Z",
+          "comments": 2
+        },
+        {
+          "number": 44037,
+          "title": "Recurring fd-recycle corruption: TLS application-data records written into memory_store.db while gat",
+          "url": "https://github.com/NousResearch/hermes-agent/issues/44037",
+          "labels": [
+            "type/bug",
+            "comp/gateway",
+            "comp/plugins",
+            "tool/memory",
+            "P1"
+          ],
+          "severity": "P1",
+          "type": "bug",
+          "created_at": "2026-06-11T05:59:42Z",
+          "updated_at": "2026-06-11T06:21:49Z",
+          "comments": 0
+        },
+        {
+          "number": 43842,
+          "title": "macOS: plist refresh bootout from inside the gateway kills the CLI before bootstrap \u2014 agent-initiate",
+          "url": "https://github.com/NousResearch/hermes-agent/issues/43842",
+          "labels": [
+            "type/bug",
+            "comp/gateway",
+            "area/config",
+            "P1"
+          ],
+          "severity": "P1",
+          "type": "bug",
+          "created_at": "2026-06-10T23:53:11Z",
+          "updated_at": "2026-06-11T01:39:57Z",
+          "comments": 1
+        },
+        {
+          "number": 43466,
+          "title": "delegate_task: _strip_blocked_tools doesn't strip 'messaging'/'cronjob', so children inherit send_me",
+          "url": "https://github.com/NousResearch/hermes-agent/issues/43466",
+          "labels": [
+            "type/security",
+            "comp/agent",
+            "tool/delegate",
+            "P1"
+          ],
+          "severity": "P1",
+          "type": "security",
+          "created_at": "2026-06-10T10:15:38Z",
+          "updated_at": "2026-06-10T12:13:47Z",
+          "comments": 1
+        },
+        {
+          "number": 43066,
+          "title": "Context compaction loses assistant messages and merges user follow-ups",
+          "url": "https://github.com/NousResearch/hermes-agent/issues/43066",
+          "labels": [
+            "type/bug",
+            "comp/agent",
+            "comp/gateway",
+            "P1"
+          ],
+          "severity": "P1",
+          "type": "bug",
+          "created_at": "2026-06-09T20:23:34Z",
+          "updated_at": "2026-06-09T21:57:26Z",
+          "comments": 1
+        },
+        {
+          "number": 43025,
+          "title": "Security: redact_secrets config not preventing API key exposure in terminal output",
+          "url": "https://github.com/NousResearch/hermes-agent/issues/43025",
+          "labels": [
+            "type/security",
+            "area/config",
+            "P1"
+          ],
+          "severity": "P1",
+          "type": "security",
+          "created_at": "2026-06-09T19:01:52Z",
+          "updated_at": "2026-06-12T14:14:36Z",
+          "comments": 1
+        },
+        {
+          "number": 42909,
+          "title": "Telegram gateway connects and polls successfully but incoming DMs produce zero log output and no res",
+          "url": "https://github.com/NousResearch/hermes-agent/issues/42909",
+          "labels": [
+            "type/bug",
+            "comp/gateway",
+            "platform/telegram",
+            "P1",
+            "needs-repro"
+          ],
+          "severity": "P1",
+          "type": "bug",
+          "created_at": "2026-06-09T15:23:32Z",
+          "updated_at": "2026-06-09T16:43:49Z",
+          "comments": 1
+        },
+        {
+          "number": 42524,
+          "title": "macOS 26: gateway start/restart refreshes LaunchAgent but launchctl exits 5 and falls back to detach",
+          "url": "https://github.com/NousResearch/hermes-agent/issues/42524",
+          "labels": [
+            "type/bug",
+            "comp/gateway",
+            "area/config",
+            "P1"
+          ],
+          "severity": "P1",
+          "type": "bug",
+          "created_at": "2026-06-09T02:14:31Z",
+          "updated_at": "2026-06-12T08:05:37Z",
+          "comments": 2
+        }
+      ]
+    },
+    "DEPT 2: AGENT & REASONING": {
+      "total_issues": 700,
+      "p0_critical": 0,
+      "p1_high": 21,
+      "p2_medium": 211,
+      "p3_low": 468,
+      "bugs": 427,
+      "features": 240,
+      "security": 11,
+      "top_p0_issues": [],
+      "top_p1_issues": [
+        {
+          "number": 44731,
+          "title": "[Security] Hermes browser private-network policy bypass via eval-triggered main-frame navigation",
+          "url": "https://github.com/NousResearch/hermes-agent/issues/44731",
+          "labels": [
+            "type/security",
+            "comp/tools",
+            "tool/browser",
+            "P1"
+          ],
+          "severity": "P1",
+          "type": "security",
+          "created_at": "2026-06-12T07:15:21Z",
+          "updated_at": "2026-06-12T13:19:26Z",
+          "comments": 1
+        },
+        {
+          "number": 44585,
+          "title": "[Bug]: Cron can inherit temporary paid provider state and continue billing during pause/stop contain",
+          "url": "https://github.com/NousResearch/hermes-agent/issues/44585",
+          "labels": [
+            "type/bug",
+            "comp/agent",
+            "comp/cron",
+            "P1"
+          ],
+          "severity": "P1",
+          "type": "bug",
+          "created_at": "2026-06-12T01:37:20Z",
+          "updated_at": "2026-06-12T01:56:16Z",
+          "comments": 1
+        },
+        {
+          "number": 43899,
+          "title": "[Bug]: Cron jobs fail with 'Model parameter is required' when model is not explicitly set on the job",
+          "url": "https://github.com/NousResearch/hermes-agent/issues/43899",
+          "labels": [
+            "type/bug",
+            "comp/cron",
+            "P1"
+          ],
+          "severity": "P1",
+          "type": "bug",
+          "created_at": "2026-06-11T01:53:13Z",
+          "updated_at": "2026-06-12T14:14:31Z",
+          "comments": 3
+        },
+        {
+          "number": 43719,
+          "title": "Security: Malicious third-party plugins targeting Hermes dashboards (jellyfinuser/gitea.com)",
+          "url": "https://github.com/NousResearch/hermes-agent/issues/43719",
+          "labels": [
+            "type/security",
+            "comp/plugins",
+            "P1"
+          ],
+          "severity": "P1",
+          "type": "security",
+          "created_at": "2026-06-10T18:39:31Z",
+          "updated_at": "2026-06-10T18:49:24Z",
+          "comments": 0
+        },
+        {
+          "number": 43083,
+          "title": "Passwords get replaced by *** but model reads back its own conversation history and fails on second ",
+          "url": "https://github.com/NousResearch/hermes-agent/issues/43083",
+          "labels": [
+            "type/bug",
+            "comp/agent",
+            "P1"
+          ],
+          "severity": "P1",
+          "type": "bug",
+          "created_at": "2026-06-09T21:00:46Z",
+          "updated_at": "2026-06-10T00:21:14Z",
+          "comments": 6
+        },
+        {
+          "number": 43014,
+          "title": "cron: deliver=origin fails to resolve delivery target in CLI sessions",
+          "url": "https://github.com/NousResearch/hermes-agent/issues/43014",
+          "labels": [
+            "type/bug",
+            "comp/cron",
+            "P1"
+          ],
+          "severity": "P1",
+          "type": "bug",
+          "created_at": "2026-06-09T18:44:09Z",
+          "updated_at": "2026-06-10T00:45:49Z",
+          "comments": 2
+        },
+        {
+          "number": 42875,
+          "title": "memory(action=add) drift guard rejects valid writes after external disk changes \u2014 internal base neve",
+          "url": "https://github.com/NousResearch/hermes-agent/issues/42875",
+          "labels": [
+            "type/bug",
+            "tool/memory",
+            "P1"
+          ],
+          "severity": "P1",
+          "type": "bug",
+          "created_at": "2026-06-09T14:12:15Z",
+          "updated_at": "2026-06-09T15:32:53Z",
+          "comments": 2
+        },
+        {
+          "number": 42874,
+          "title": "[Bug] memory(action=add) refuses legitimate appends when disk MEMORY.md byte size differs from in-me",
+          "url": "https://github.com/NousResearch/hermes-agent/issues/42874",
+          "labels": [
+            "type/bug",
+            "tool/memory",
+            "P1"
+          ],
+          "severity": "P1",
+          "type": "bug",
+          "created_at": "2026-06-09T14:08:30Z",
+          "updated_at": "2026-06-09T15:32:51Z",
+          "comments": 1
+        },
+        {
+          "number": 42810,
+          "title": "[Bug]: API call to openai compatible endpoint fails since upgrade to v0.16 on Python3.11",
+          "url": "https://github.com/NousResearch/hermes-agent/issues/42810",
+          "labels": [
+            "type/bug",
+            "comp/agent",
+            "P1"
+          ],
+          "severity": "P1",
+          "type": "bug",
+          "created_at": "2026-06-09T11:30:27Z",
+          "updated_at": "2026-06-09T12:41:43Z",
+          "comments": 0
+        },
+        {
+          "number": 42449,
+          "title": "delegate_task corrupts parent context_length via shared plugin context engine singleton",
+          "url": "https://github.com/NousResearch/hermes-agent/issues/42449",
+          "labels": [
+            "type/bug",
+            "comp/agent",
+            "tool/delegate",
+            "tool/memory",
+            "P1"
+          ],
+          "severity": "P1",
+          "type": "bug",
+          "created_at": "2026-06-08T23:44:55Z",
+          "updated_at": "2026-06-09T03:14:40Z",
+          "comments": 3
+        }
+      ]
+    },
+    "DEPT 3: DESKTOP APP": {
+      "total_issues": 265,
+      "p0_critical": 0,
+      "p1_high": 4,
+      "p2_medium": 54,
+      "p3_low": 207,
+      "bugs": 176,
+      "features": 75,
+      "security": 8,
+      "top_p0_issues": [],
+      "top_p1_issues": [
+        {
+          "number": 44710,
+          "title": "[Bug]: Auth token refresh uses non-existent api.nousresearch.com instead of portal.nousresearch.com",
+          "url": "https://github.com/NousResearch/hermes-agent/issues/44710",
+          "labels": [
+            "type/bug",
+            "comp/agent",
+            "comp/cron",
+            "provider/nous",
+            "area/auth",
+            "P1"
+          ],
+          "severity": "P1",
+          "type": "bug",
+          "created_at": "2026-06-12T06:30:31Z",
+          "updated_at": "2026-06-12T14:14:25Z",
+          "comments": 3
+        },
+        {
+          "number": 39714,
+          "title": "Bug: hermes update installs deps into hardcoded venv/ while active env is .venv (duplicate orphan vi",
+          "url": "https://github.com/NousResearch/hermes-agent/issues/39714",
+          "labels": [
+            "type/bug",
+            "comp/cli",
+            "P1",
+            "python:uv"
+          ],
+          "severity": "P1",
+          "type": "bug",
+          "created_at": "2026-06-05T09:44:29Z",
+          "updated_at": "2026-06-05T10:51:48Z",
+          "comments": 2
+        },
+        {
+          "number": 39455,
+          "title": "nix-lockfile-fix.yml can never commit its hash update \u2014 stages nix/tui.nix + nix/web.nix, but fix-lo",
+          "url": "https://github.com/NousResearch/hermes-agent/issues/39455",
+          "labels": [
+            "type/bug",
+            "area/nix",
+            "P1"
+          ],
+          "severity": "P1",
+          "type": "bug",
+          "created_at": "2026-06-05T01:25:20Z",
+          "updated_at": "2026-06-08T05:27:16Z",
+          "comments": 1
+        },
+        {
+          "number": 38026,
+          "title": "fix(remote-backend): prevent sync_back writes into host skill dirs",
+          "url": "https://github.com/NousResearch/hermes-agent/issues/38026",
+          "labels": [
+            "backend/file-sync",
+            "type/security",
+            "comp/tools",
+            "area/config",
+            "P1"
+          ],
+          "severity": "P1",
+          "type": "security",
+          "created_at": "2026-06-03T08:06:43Z",
+          "updated_at": "2026-06-04T06:34:16Z",
+          "comments": 0
+        }
+      ]
+    },
+    "DEPT 4: CRON & SCHEDULING": {
+      "total_issues": 6,
+      "p0_critical": 0,
+      "p1_high": 0,
+      "p2_medium": 2,
+      "p3_low": 4,
+      "bugs": 2,
+      "features": 4,
+      "security": 0,
+      "top_p0_issues": [],
+      "top_p1_issues": []
+    },
+    "DEPT 5: CONFIG & PROFILES": {
+      "total_issues": 34,
+      "p0_critical": 0,
+      "p1_high": 0,
+      "p2_medium": 11,
+      "p3_low": 23,
+      "bugs": 21,
+      "features": 10,
+      "security": 2,
+      "top_p0_issues": [],
+      "top_p1_issues": []
+    },
+    "DEPT 6: UNCATEGORIZED": {
+      "total_issues": 18,
+      "p0_critical": 0,
+      "p1_high": 0,
+      "p2_medium": 2,
+      "p3_low": 16,
+      "bugs": 10,
+      "features": 4,
+      "security": 0,
+      "top_p0_issues": [],
+      "top_p1_issues": []
+    }
+  }
+}
