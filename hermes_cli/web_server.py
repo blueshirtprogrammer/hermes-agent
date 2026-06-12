@@ -6733,6 +6733,8 @@ class CronJobCreate(BaseModel):
     name: str = ""
     deliver: str = "local"
     skills: Optional[List[str]] = None
+    max_retries: Optional[int] = None
+    retry_delay_seconds: Optional[float] = None
 
 
 class CronJobUpdate(BaseModel):
@@ -6905,6 +6907,8 @@ async def create_cron_job(body: CronJobCreate, profile: str = "default"):
             name=body.name,
             deliver=body.deliver,
             skills=body.skills,
+            max_retries=body.max_retries,
+            retry_delay_seconds=body.retry_delay_seconds,
         )
     except Exception as e:
         _log.exception("POST /api/cron/jobs failed")

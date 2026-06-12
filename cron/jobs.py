@@ -909,7 +909,20 @@ def mark_job_run(job_id: str, success: bool, error: Optional[str] = None,
                 job["last_error"] = error if not success else None
                 # Track delivery failures separately — cleared on successful delivery
                 job["last_delivery_error"] = delivery_error
-                
+
+                # Append to run history (bounded to last 50 runs)
+                if "run_history" not in job:
+                    job["run_history"] = []
+                job["run_history"].append({
+                    "at": now,
+                    "status": "ok" if success else "error",
+                    "error": error if not success else None,
+                    "delivery_error": delivery_error,
+                })
+                # Trim history to last 50 entries
+                if len(job["run_history"]) > 50:
+                    job["run_history"] = job["run_history"][-50:]
+
                 # Increment completed count
                 if job.get("repeat"):
                     job["repeat"]["completed"] = job["repeat"].get("completed", 0) + 1
