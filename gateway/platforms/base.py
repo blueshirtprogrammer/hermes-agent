@@ -3576,7 +3576,7 @@ class BasePlatformAdapter(ABC):
             self._pending_messages,
             session_key,
             state.event,
-            merge_text=True,
+            merge_text=False,  # FIFO semantics: each event gets its own turn slot
         )
         return True
 
@@ -4015,7 +4015,7 @@ class BasePlatformAdapter(ABC):
                     self._pending_messages,
                     session_key,
                     event,
-                    merge_text=event.message_type == MessageType.TEXT,
+                    merge_text=False,  # FIFO: each inbound event becomes its own turn slot
                 )
             return  # Don't process now - will be handled after current task finishes
         

@@ -547,8 +547,19 @@ def compress_context(
                 except (ValueError, Exception) as e:
                     logger.debug("Could not propagate title on compression: %s", e)
             agent._session_db.update_system_prompt(agent.session_id, new_system_prompt)
-            # Reset flush cursor — new session starts with no messages written
+            # Reset flush cursor — new session starts with no messages written.
+            # Fixes #44837 root-cause layer 1 (already applied in agent_init.py).
             agent._last_flushed_db_idx = 0
+            # Immediately flush the post-compression message list to the new
+            # child session.  The old conversation_history is much longer than
+            # the compressed transcript; calling _flush_messages_to_session_db
+            # here ensures start_idx=0, _last_flushed_db_idx=0, and all
+            # compressed rows land in the child DB instead of nothing.
+            # Fixes #43066 Issue 1.
+            try:
+                agent._flush_messages_to_session_db(messages, None)
+            except Exception as _flush_err:
+                logger.debug("Post-compression flush to child session failed: %s", _flush_err)
         except Exception as e:
             logger.warning("Session DB compression split failed — new session will NOT be indexed: %s", e)
 
