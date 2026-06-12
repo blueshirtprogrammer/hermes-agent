@@ -3674,7 +3674,11 @@ class MatrixAdapter(BasePlatformAdapter):
         has_explicit_name = bool(room_name)
         is_direct = bool(self._dm_rooms.get(room_id, False))
         conflict = bool(is_direct and has_explicit_name)
-        chat_type = "dm" if is_direct and not has_explicit_name else "room"
+        # A room is a DM if m.direct marks it, regardless of whether it has
+        # an explicit name. Fixes #44679 where DM rooms with explicit names
+        # (set by the server) were misclassified as group rooms and required
+        # @mention even though MATRIX_REQUIRE_MENTION=false should not apply to DMs.
+        chat_type = "dm" if is_direct else "room"
         display_name = room_name or canonical_alias or room_id
 
         identity = MatrixRoomIdentity(

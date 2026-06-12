@@ -307,12 +307,15 @@ class MemoryStore:
 
         with self._file_lock(self._path_for(target)):
             # Re-read from disk under lock to pick up writes from other sessions.
-            # If external drift was detected, the file was backed up to .bak.<ts>
-            # — refuse the mutation so we don't clobber the un-roundtrippable
-            # content the patch tool / shell append / sister session wrote.
-            bak = self._reload_target(target)
-            if bak:
-                return _drift_error(self._path_for(target), bak)
+            # Unlike replace(), add() only appends — never flushes full state —
+            # so we never clobber existing content even if the file was modified
+            # externally. The drift guard (which blocks on corruption) belongs only
+            # on replace() which does a full overwrite. (#42874)
+            path = self._path_for(target)
+            fresh = self._read_file(path)
+            fresh = list(dict.fromkeys(fresh))  # deduplicate
+            self._set_entries(target, fresh)
+
 
             entries = self._entries_for(target)
             limit = self._char_limit(target)
