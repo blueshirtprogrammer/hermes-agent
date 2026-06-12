@@ -54,6 +54,26 @@ class TestToolsetIntersection:
         assert "memory" not in child
         assert "terminal" in child
 
+    def test_strip_blocked_removes_side_effect_toolsets(self):
+        """Subagents never inherit scheduling or messaging side-effect surfaces."""
+        child = _strip_blocked_tools([
+            "terminal",
+            "cronjob",
+            "messaging",
+            "discord",
+            "discord_admin",
+            "yuanbao",
+            "feishu_drive",
+        ])
+
+        assert "cronjob" not in child
+        assert "messaging" not in child
+        assert "discord" not in child
+        assert "discord_admin" not in child
+        assert "yuanbao" not in child
+        assert "feishu_drive" not in child
+        assert "terminal" in child
+
     def test_empty_intersection_yields_empty_toolsets(self):
         """If parent has no overlap with requested, child gets nothing extra."""
         parent = SimpleNamespace(enabled_toolsets=["terminal"])

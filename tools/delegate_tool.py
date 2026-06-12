@@ -41,14 +41,33 @@ from tools.terminal_tool import set_approval_callback as _set_subagent_approval_
 from utils import base_url_hostname, is_truthy_value
 
 
-# Tools that children must never have access to
+# Tools and toolsets that children must never have access to.
+# Keep toolset and direct-tool guards in sync: named toolsets are stripped before
+# child construction, and the same toolsets are also passed as disabled_toolsets
+# so broad/composite parent toolsets (for example hermes-cli) cannot smuggle
+# blocked tools after toolset expansion.
 DELEGATE_BLOCKED_TOOLS = frozenset(
     [
-        "delegate_task",  # no recursive delegation
+        "delegate_task",  # no recursive delegation for leaf workers
         "clarify",  # no user interaction
         "memory",  # no writes to shared MEMORY.md
         "send_message",  # no cross-platform side effects
         "execute_code",  # children should reason step-by-step, not write scripts
+    ]
+)
+
+DELEGATE_BLOCKED_TOOLSETS = frozenset(
+    [
+        "delegation",
+        "clarify",
+        "memory",
+        "code_execution",
+        "cronjob",
+        "messaging",
+        "discord",
+        "discord_admin",
+        "yuanbao",
+        "feishu_drive",
     ]
 )
 
@@ -704,14 +723,15 @@ def _resolve_workspace_hint(parent_agent) -> Optional[str]:
 
 
 def _strip_blocked_tools(toolsets: List[str]) -> List[str]:
-    """Remove toolsets that contain only blocked tools."""
-    blocked_toolset_names = {
-        "delegation",
-        "clarify",
-        "memory",
-        "code_execution",
-    }
-    return [t for t in toolsets if t not in blocked_toolset_names]
+    """Remove toolsets that delegated children must never receive.
+
+    Delegate workers run without a live user and should not be able to create
+    durable schedules, ask the user, write shared memory, recurse into more
+    workers, or perform cross-platform messaging/admin side effects.  Keep this
+    list at the toolset boundary so explicit ``toolsets=[...]`` requests and
+    inherited parent toolsets are filtered consistently.
+    """
+    return [t for t in toolsets if t not in DELEGATE_BLOCKED_TOOLSETS]
 
 
 def _build_child_progress_callback(
@@ -1116,6 +1136,11 @@ def _build_child_agent(
     # fallback_model parameter (which handles both list and dict forms).
     parent_fallback = getattr(parent_agent, "_fallback_chain", None) or None
 
+    parent_disabled_toolsets = list(getattr(parent_agent, "disabled_toolsets", None) or [])
+    child_disabled_toolsets = list(
+        dict.fromkeys(parent_disabled_toolsets + sorted(DELEGATE_BLOCKED_TOOLSETS))
+    )
+
     # Inherit the parent's OpenRouter provider-preference filters by default
     # (so subagents routed to the same provider honour the same routing
     # constraints).  BUT: when `delegation.provider` is set the user is
@@ -1151,6 +1176,7 @@ def _build_child_agent(
         prefill_messages=getattr(parent_agent, "prefill_messages", None),
         fallback_model=parent_fallback,
         enabled_toolsets=child_toolsets,
+        disabled_toolsets=child_disabled_toolsets,
         quiet_mode=True,
         ephemeral_system_prompt=child_prompt,
         log_prefix=f"[subagent-{task_index}]",

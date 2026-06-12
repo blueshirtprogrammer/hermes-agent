@@ -2424,6 +2424,36 @@ class TestOrchestratorRoleBehavior(unittest.TestCase):
             self.assertEqual(mock_child._delegate_role, "leaf")
 
     @patch("tools.delegate_tool._resolve_delegation_credentials")
+    @patch("tools.delegate_tool._load_config", return_value={})
+    def test_child_agent_forces_disabled_side_effect_toolsets(
+        self, mock_cfg, mock_creds
+    ):
+        """Composite parent toolsets must not leak cron/messaging to children.
+
+        A parent may run with a broad platform toolset such as hermes-cli.  Even
+        if that composite toolset survives enabled_toolsets scoping, child
+        AIAgent construction must also receive disabled_toolsets so model_tools
+        removes cronjob/messaging/admin tools after resolving composites.
+        """
+        mock_creds.return_value = {
+            "provider": None, "base_url": None,
+            "api_key": None, "api_mode": None, "model": None,
+        }
+        parent = _make_mock_parent(depth=0)
+        parent.enabled_toolsets = ["hermes-cli", "terminal"]
+        with patch("run_agent.AIAgent") as MockAgent:
+            mock_child = _make_role_mock_child()
+            MockAgent.return_value = mock_child
+            delegate_task(goal="test", parent_agent=parent)
+            kwargs = MockAgent.call_args[1]
+            disabled = set(kwargs.get("disabled_toolsets") or [])
+            self.assertIn("cronjob", disabled)
+            self.assertIn("messaging", disabled)
+            self.assertIn("clarify", disabled)
+            self.assertIn("memory", disabled)
+            self.assertIn("code_execution", disabled)
+
+    @patch("tools.delegate_tool._resolve_delegation_credentials")
     def test_orchestrator_enabled_false_forces_leaf(self, mock_creds):
         """Kill switch delegation.orchestrator_enabled=false overrides
         role='orchestrator'."""
