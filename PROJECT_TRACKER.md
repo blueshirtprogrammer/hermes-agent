@@ -121,18 +121,18 @@
 ### HIGHEST PRIORITY (Security + Data Loss)
 
 **SECURITY (Must Fix Today):**
-1. ~~#44727~~ - Quick commands bypass admin restrictions ✅ **FIXED**
-2. #44731 - Browser private-network policy bypass [SECURITY]
-3. #43025 - redact_secrets not preventing API key exposure [SECURITY]
-4. #43719 - Malicious third-party plugins targeting dashboards [SECURITY]
-5. #43466 - delegate_task doesn't strip messaging/cronjob toolsets [SECURITY] ✓ ALREADY FIXED
+1. ~~#44727~~ - Quick commands bypass admin restrictions ✅ **FIXED + PUSHED**
+2. ~~#44731~~ - Browser private-network policy bypass via eval ✅ **FIXED + PUSHED**
+3. ~~#43025~~ - redact_secrets not preventing API key exposure ✅ **FIXED + PUSHED**
+4. #43719 - Malicious third-party plugins targeting dashboards [SKIP - plugin permissions system already in place]
+5. ~~#43899~~ - Cron model resolution fix ✅ **ALREADY FIXED**
 
 **DATA LOSS (Must Fix Today):**
-6. #44837 - Session DB turn-end flush drops assistant messages
-7. #43066 - Context compaction loses assistant messages
-8. #42449 - delegate_task corrupts parent context_length
-
-**CRON BILLING (Must Fix Today):**
+6. ~~#44837~~ - Session DB drops assistant after compaction ✅ **FIXED + PUSHED**
+7. #43066 - Context compaction truncating mid-turn
+8. #42449 - delegate_task context not passed
+9. #44327 - Cached-agent cursor reset on fresh turns [needed by #44837, already fixed in layer 1]
+10. #43211 - Token budget race at high concurrency
 9. #44585 - Cron inherits paid provider state during pause/stop
 10. #43899 - Cron jobs fail 'Model parameter is required' ✓ ALREADY FIXED
 
