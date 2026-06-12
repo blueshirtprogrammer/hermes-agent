@@ -1602,6 +1602,45 @@ atexit.register(_atexit_cleanup)
 # =============================================================================
 # Exit Code Context for Common CLI Tools
 # =============================================================================
+# Commands that dump the full environment are blocked because they expose
+# secrets that _sanitize_subprocess_env can't redact (the values are
+# intentionally in the subprocess env so the command can run).  These are
+# allowed only with argument filters (e.g. `printenv PATH`, `env -u KEY`).
+_ENV_DUMP_COMMANDS = frozenset({"printenv", "env", "set", "local", "declare", "typeset", "export", "compgen", "complete"})
+
+
+def _is_safe_env_command(command: str) -> str | None:
+    """Return an error message if command is an unsafe env-dump, else None.
+
+    Blocks bare ``printenv``, ``env``, ``set`` (no arguments) because they
+    dump all environment variables including secret values that were passed
+    to the subprocess.  Filtered variants are allowed:
+      printenv PATH         (safe — single known var)
+      env -u KEY value      (safe — explicitly unsets a var)
+      set -a                (safe — shell options)
+    """
+    words = command.strip().split()
+    if not words:
+        return None
+    base = words[0].split("/")[-1].lower()
+    if base not in _ENV_DUMP_COMMANDS:
+        return None
+    # Bare invocation — no arguments = full dump
+    if len(words) == 1:
+        return (
+            f"'{base}' is not allowed in the terminal tool because it dumps "
+            "all environment variables, which can expose secret values.  "
+            "Use 'printenv PATH' (or another specific variable name) instead."
+        )
+    # printenv with no args after it (may have options like -0)
+    if base == "printenv" and len(words) == 1:
+        return (
+            "'printenv' with no arguments dumps all variables.  "
+            "Use 'printenv VARNAME' to print a specific variable."
+        )
+    return None
+
+
 # Many Unix commands use non-zero exit codes for informational purposes, not
 # to indicate failure.  The model sees a raw exit_code=1 from `grep` and
 # wastes a turn investigating something that just means "no matches".
@@ -2084,6 +2123,16 @@ def terminal_tool(
                 desc = approval.get("description", "flagged as dangerous")
                 approval_note = f"Command was flagged ({desc}) and auto-approved by smart approval."
 
+        # Block bare env-dump commands that would expose secrets to output.
+        # See _is_safe_env_command for allowed variants.
+        if env_dump_error := _is_safe_env_command(command):
+            return json.dumps({
+                "output": "",
+                "exit_code": -1,
+                "error": env_dump_error,
+                "status": "blocked",
+            }, ensure_ascii=False)
+
         # Validate workdir against shell injection
         if workdir:
             workdir_error = _validate_workdir(workdir)
@@ -2096,18 +2145,6 @@ def terminal_tool(
                     "error": workdir_error,
                     "status": "blocked"
                 }, ensure_ascii=False)
-
-        # Prepare command for execution
-        pty_disabled_reason = None
-        effective_pty = pty
-        if pty and _command_requires_pipe_stdin(command):
-            effective_pty = False
-            pty_disabled_reason = (
-                "PTY disabled for this command because it expects piped stdin/EOF "
-                "(for example gh auth login --with-token). For local background "
-                "processes, call process(action='close') after writing so it receives "
-                "EOF."
-            )
 
         if background:
             # Spawn a tracked background process via the process registry.

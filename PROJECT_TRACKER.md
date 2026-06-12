@@ -121,7 +121,7 @@
 ### HIGHEST PRIORITY (Security + Data Loss)
 
 **SECURITY (Must Fix Today):**
-1. #44727 - Quick commands bypass admin restrictions [SECURITY]
+1. ~~#44727~~ - Quick commands bypass admin restrictions ✅ **FIXED**
 2. #44731 - Browser private-network policy bypass [SECURITY]
 3. #43025 - redact_secrets not preventing API key exposure [SECURITY]
 4. #43719 - Malicious third-party plugins targeting dashboards [SECURITY]
@@ -170,7 +170,7 @@ Fix all security issues + data loss bugs.
 | 6 | #44837 Session DB flush | Gateway | Core | TODO |
 | 7 | #43066 Context compaction | Agent | Loop | TODO |
 | 8 | #42449 delegate context | Agent | Delegate | TODO |
-| 9 | #44585 Cron billing | Agent | Cron | TODO |
+| 9 | #44585 Cron billing | Agent | Cron | ✅ DONE |
 | 10 | #43899 Cron model | Cron | Core | ✅ DONE |
 
 ### PHASE 2: PLATFORM STABILITY (Week 2)
