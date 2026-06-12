@@ -3420,9 +3420,12 @@ def launchd_plist_is_current() -> bool:
 def refresh_launchd_plist_if_needed() -> bool:
     """Rewrite the installed launchd plist when the generated definition has changed.
 
-    Unlike systemd, launchd picks up plist changes on the next ``launchctl kill``/
-    ``launchctl kickstart`` cycle — no daemon-reload is needed. We still bootout/
-    bootstrap to make launchd re-read the updated plist immediately.
+    Unlike systemd, launchd picks up plist changes on ``launchctl kickstart``.
+    We use kickstart -k -p (kill + restart) so launchd tears down only the
+    service job itself, NOT the calling process's group — unlike bootout which
+    kills the entire service tree including any descendant CLI that initiated
+    the update. Fixes #43842 where agent-initiated self-update from inside
+    the gateway killed the gateway itself before bootstrap could run.
     """
     plist_path = get_launchd_plist_path()
     if not plist_path.exists() or launchd_plist_is_current():
@@ -3434,16 +3437,13 @@ def refresh_launchd_plist_if_needed() -> bool:
 
     plist_path.write_text(new_plist, encoding="utf-8")
     label = get_launchd_label()
-    # Bootout/bootstrap so launchd picks up the new definition
+    # kickstart -k -p: kill existing job, restart with new plist.
+    # Unlike bootout+bootstrap, kickstart does NOT kill the calling process's
+    # process group — it only kills the service's own job tree.
     subprocess.run(
-        ["launchctl", "bootout", f"{_launchd_domain()}/{label}"],
+        ["launchctl", "kickstart", "-k", "-p", f"{_launchd_domain()}/{label}"],
         check=False,
         timeout=90,
-    )
-    subprocess.run(
-        ["launchctl", "bootstrap", _launchd_domain(), str(plist_path)],
-        check=False,
-        timeout=30,
     )
     print(
         "↻ Updated gateway launchd service definition to match the current Hermes install"
