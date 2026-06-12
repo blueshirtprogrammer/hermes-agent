@@ -351,6 +351,14 @@ export function useStatusbarItems({
         variant: 'action'
       },
       {
+        icon: <Package className="size-3" />,
+        id: 'plugins',
+        label: 'Plugins',
+        title: 'Open Plugins',
+        to: PLUGINS_ROUTE,
+        variant: 'action'
+      },
+      {
         icon: <Activity className="size-3" />,
         id: 'dashboard',
         label: 'Dashboard',

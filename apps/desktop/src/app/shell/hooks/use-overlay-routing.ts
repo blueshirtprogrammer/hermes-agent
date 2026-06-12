@@ -16,6 +16,7 @@ export function useOverlayRouting() {
   const agentsOpen = currentView === 'agents'
   const cronOpen = currentView === 'cron'
   const dashboardOpen = currentView === 'dashboard'
+  const pluginsOpen = currentView === 'plugins'
   const profilesOpen = currentView === 'profiles'
   const chatOpen = currentView === 'chat'
   const overlayOpen = isOverlayView(currentView)
@@ -66,6 +67,7 @@ export function useOverlayRouting() {
     dashboardOpen,
     openAgents,
     openCommandCenterSection,
+    pluginsOpen,
     profilesOpen,
     settingsOpen,
     toggleCommandCenter

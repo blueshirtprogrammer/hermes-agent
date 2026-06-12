@@ -54,6 +54,7 @@ import {
   DASHBOARD_ROUTE,
   MESSAGING_ROUTE,
   NEW_CHAT_ROUTE,
+  PLUGINS_ROUTE,
   PROFILES_ROUTE,
   sessionRoute,
   SETTINGS_ROUTE,
@@ -330,6 +331,14 @@ export function CommandPalette() {
             keywords: ['schedule', 'jobs'],
             label: t.shell.statusbar.cron,
             run: go(CRON_ROUTE)
+          },
+          {
+            action: 'nav.plugins',
+            icon: Package,
+            id: 'nav-plugins',
+            label: 'Plugins',
+            keywords: ['extensions', 'addons', 'marketplace', 'install'],
+            run: go(PLUGINS_ROUTE)
           },
           { action: 'nav.profiles', icon: Users, id: 'nav-profiles', label: t.profiles.title, run: go(PROFILES_ROUTE) },
           { action: 'nav.dashboard', icon: BarChart3, id: 'nav-dashboard', label: 'Dashboard', keywords: ['health', 'usage', 'stats', 'overview'], run: go(DASHBOARD_ROUTE) },
