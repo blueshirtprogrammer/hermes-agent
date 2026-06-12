@@ -132,25 +132,20 @@
 7. ~~#43066~~ - Context compaction truncating mid-turn ✅ **FIXED + PUSHED**
 8. ~~#42449~~ - delegate_task context corruption (shared singleton) ✅ **FIXED + PUSHED**
 9. ~~#44327~~ - Cached-agent cursor reset [already fixed in #44837 layer 1]
-10. #43211 - Token budget race at high concurrency
+10. ~~#43211~~ - Stale stream silently retries on same provider instead of fallback ✅ **FIXED + PUSHED**
 11. ~~#44585~~ - Cron inherits paid provider state during pause/stop ✅ **FIXED + PUSHED**
 
 ### HIGH PRIORITY (Functionality)
 
 11. #44037 - fd-recycle corruption in memory_store.db
-12. #43842 - macOS plist refresh kills CLI before bootstrap
-13. #43083 - Secret redaction breaks second tool call
-14. #42909 - Telegram DMs produce zero log output
+12. ~~#43842~~ - macOS plist refresh kills CLI before bootstrap ✅ **FIXED + PUSHED**
+13. ~~#43083~~ - Secret redaction breaks second tool call ✅ **FIXED + PUSHED**
+14. #42909 - Telegram DMs produce zero log output [WSL2/PTB polling compat]
 15. #42524 - macOS 26 launchctl exit 5 fallback
-16. #44679 - Matrix gateway treats DM as group
-17. #42875 - memory drift guard rejects valid writes
-18. #42874 - memory refuses legitimate appends
-19. #42810 - OpenAI compatible endpoint fails
-20. #44710 - Auth token refresh uses wrong domain
-21. #43014 - cron deliver=origin fails in CLI
-22. #39714 - hermes update installs to wrong venv
-23. #39455 - nix-lockfile-fix can't commit hash update
-24. #38026 - sync_back writes to host skill dirs
+16. ~~#44679~~ - Matrix gateway treats DM as group ✅ **FIXED + PUSHED**
+17. #42875 - memory drift guard rejects valid writes after external disk changes
+18. ~~#42874~~ - memory refuses legitimate appends (drift guard over-reach) ✅ **FIXED + PUSHED**
+19. #42810 - OpenAI compatible endpoint fails on Python 3.11 [httpx/httpcore compat — NOT a Hermes bug; Python 3.14 works]
 
 ---
 
