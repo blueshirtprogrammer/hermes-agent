@@ -1658,17 +1658,23 @@ def run_job(job: dict) -> tuple[bool, str, str, Optional[str]]:
         )
         from hermes_cli.auth import AuthError
         try:
-            # Do not inject HERMES_INFERENCE_PROVIDER here. resolve_runtime_provider()
-            # already prefers persisted config over stale shell/env overrides when
-            # no explicit provider is requested. Passing the env var here short-
-            # circuits that precedence and can resurrect old providers (for
-            # example DeepSeek) for cron jobs that do not pin provider/model.
-            runtime_kwargs = {
-                "requested": job.get("provider"),
-            }
-            if job.get("base_url"):
-                runtime_kwargs["explicit_base_url"] = job.get("base_url")
-            runtime = resolve_runtime_provider(**runtime_kwargs)
+            # Non-pinned cron jobs must not inherit a paid provider that the
+            # operator set in the shell profile for interactive use only.
+            # resolve_runtime_provider() reads HERMES_INFERENCE_PROVIDER internally
+            # (runtime_provider.py:438) when no explicit provider is configured.
+            # We strip it for non-pinned jobs so config.yaml is the ceiling.
+            # Fixes #44585.
+            _env_provider = os.environ.pop("HERMES_INFERENCE_PROVIDER", None)
+            try:
+                runtime_kwargs = {
+                    "requested": job.get("provider"),
+                }
+                if job.get("base_url"):
+                    runtime_kwargs["explicit_base_url"] = job.get("base_url")
+                runtime = resolve_runtime_provider(**runtime_kwargs)
+            finally:
+                if _env_provider is not None:
+                    os.environ["HERMES_INFERENCE_PROVIDER"] = _env_provider
         except AuthError as auth_exc:
             # Primary provider auth failed — try fallback chain before giving up.
             logger.warning("Job '%s': primary auth failed (%s), trying fallback", job_id, auth_exc)

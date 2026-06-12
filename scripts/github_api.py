@@ -28,6 +28,24 @@ def api(method, path, body=None):
     except HTTPError as e:
         return {"error": e.code, "message": e.read().decode()[:500]}
 
+def _fix_request_path(req):
+    """Fix the Request object to use proper URL path on Windows."""
+    from urllib.parse import urlparse
+    parsed = urlparse(req.full_url)
+    # On Windows with MSYS/Git Bash, req.full_url can contain the local
+    # filesystem path instead of the remote URL.  Reconstruct from the
+    # headers we set explicitly so the actual API endpoint is used.
+    from urllib.request import Request
+    actual_url = f"https://api.github.com{parsed.path}"
+    if parsed.query:
+        actual_url += f"?{parsed.query}"
+    return Request(
+        actual_url,
+        data=req.data,
+        headers=req.headers,
+        method=req.method
+    )
+
 if __name__ == "__main__":
     method = sys.argv[1] if len(sys.argv) > 1 else "GET"
     path = sys.argv[2] if len(sys.argv) > 2 else "rate_limit"
