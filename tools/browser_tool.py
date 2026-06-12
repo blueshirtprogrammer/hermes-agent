@@ -2556,6 +2556,29 @@ def browser_snapshot(
         except Exception as _sv_exc:
             logger.debug("supervisor snapshot merge failed: %s", _sv_exc)
 
+        # SSRF gate: if a prior browser_console(expression=...) call caused
+        # main-frame navigation to a private address, the eval guard above
+        # already returned an error with _navigated_to_blocked=True.  As a
+        # second layer, check the current URL here too — defence in depth.
+        # Closes issue #44731.
+        if not _is_local_backend() and not _is_camofox_mode():
+            from tools.url_safety import is_safe_url as _chk_ssrf
+            if not _chk_ssrf(response.get("url", "")):
+                from tools.url_safety import is_always_blocked_url as _chk_floor
+                reason = "cloud-metadata address" if _chk_floor(response["url"]) else "private/internal address"
+                logger.warning(
+                    "browser_snapshot: current page URL is a %s — blocking: %s",
+                    reason, response["url"],
+                )
+                return json.dumps({
+                    "success": False,
+                    "error": (
+                        f"Blocked: current page is at a {reason} "
+                        f"({response['url']}).  Navigate to a public URL first."
+                    ),
+                    "_ssrf_blocked": True,
+                }, ensure_ascii=False)
+
         return json.dumps(response, ensure_ascii=False)
     else:
         response = {
@@ -2820,6 +2843,32 @@ def browser_console(clear: bool = False, expression: Optional[str] = None, task_
     return json.dumps(response, ensure_ascii=False)
 
 
+def _get_page_url(task_id: Optional[str] = None) -> str:
+    """Get the current page URL for the browser session, or empty string on error."""
+    if _is_camofox_mode():
+        from tools.browser_camofox import _camofox_get_page_url
+        return _camofox_get_page_url(task_id)
+
+    effective_task_id = _last_session_key(task_id or "default")
+
+    # Try supervisor path first
+    try:
+        from tools.browser_supervisor import SUPERVISOR_REGISTRY
+        supervisor = SUPERVISOR_REGISTRY.get(effective_task_id)
+        if supervisor is not None:
+            result = supervisor.evaluate_runtime("window.location.href")
+            if result.get("ok"):
+                return str(result.get("result", ""))
+    except Exception:
+        pass
+
+    # Fallback: agent-browser CLI
+    result = _run_browser_command(effective_task_id, "url", [])
+    if result.get("success"):
+        return result.get("data", {}).get("url", "")
+    return ""
+
+
 def _browser_eval(expression: str, task_id: Optional[str] = None) -> str:
     """Evaluate a JavaScript expression in the page context and return the result."""
     if _is_camofox_mode():
@@ -2854,6 +2903,27 @@ def _browser_eval(expression: str, task_id: Optional[str] = None) -> str:
                     "result_type": type(parsed).__name__,
                     "method": "cdp_supervisor",
                 }
+                # SSRF check: if the JS expression caused main-frame navigation to
+                # a private/internal address, abort so browser_snapshot() can't
+                # read the private page.  Closes issue #44731.
+                page_url = _get_page_url(task_id)
+                if page_url and not _is_local_backend() and not _is_camofox_mode():
+                    from tools.url_safety import is_safe_url as _chk_ssrf
+                    if not _chk_ssrf(page_url):
+                        from tools.url_safety import is_always_blocked_url as _chk_floor
+                        reason = "cloud-metadata address" if _chk_floor(page_url) else "private/internal address"
+                        logger.warning(
+                            "browser_eval: JS caused navigation to %s — blocked: %s",
+                            reason, page_url,
+                        )
+                        return json.dumps({
+                            "success": False,
+                            "error": (
+                                f"Blocked: expression caused navigation to a {reason} "
+                                f"({page_url}).  Use a public URL instead."
+                            ),
+                            "_navigated_to_blocked": True,
+                        }, ensure_ascii=False)
                 return json.dumps(response, ensure_ascii=False, default=str)
             # JS exception is a real failure — surface it instead of falling
             # through to the subprocess path (which would just re-run and
@@ -2923,6 +2993,26 @@ def _browser_eval(expression: str, task_id: Optional[str] = None) -> str:
         "result": parsed,
         "result_type": type(parsed).__name__,
     }
+    # SSRF check: same guard as the supervisor fast path above.
+    # Closes issue #44731 for the agent-browser CLI fallback path.
+    page_url = _get_page_url(task_id)
+    if page_url and not _is_local_backend() and not _is_camofox_mode():
+        from tools.url_safety import is_safe_url as _chk_ssrf
+        if not _chk_ssrf(page_url):
+            from tools.url_safety import is_always_blocked_url as _chk_floor
+            reason = "cloud-metadata address" if _chk_floor(page_url) else "private/internal address"
+            logger.warning(
+                "browser_eval(subprocess): JS caused navigation to %s — blocked: %s",
+                reason, page_url,
+            )
+            return json.dumps({
+                "success": False,
+                "error": (
+                    f"Blocked: expression caused navigation to a {reason} "
+                    f"({page_url}).  Use a public URL instead."
+                ),
+                "_navigated_to_blocked": True,
+            }, ensure_ascii=False)
     return json.dumps(_copy_fallback_warning(response, result), ensure_ascii=False, default=str)
 
 
