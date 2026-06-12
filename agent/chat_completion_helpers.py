@@ -1687,7 +1687,7 @@ def interruptible_streaming_api_call(agent, api_kwargs: dict, *, on_first_delta=
             raise result["error"]
         return result["response"]
 
-    result = {"response": None, "error": None, "partial_tool_names": []}
+    result = {"response": None, "error": None, "partial_tool_names": [], "consecutive_stale": 0}
     request_client_holder = {"client": None, "diag": None, "owner_tid": None}
     request_client_lock = threading.Lock()
     # Request-local cancellation flag — see interruptible_api_call for the full
@@ -2205,6 +2205,7 @@ def interruptible_streaming_api_call(agent, api_kwargs: dict, *, on_first_delta=
                             text = getattr(delta, "text", "")
                             if text and not has_tool_use:
                                 _fire_first_delta()
+                                result["consecutive_stale"] = 0
                                 agent._fire_stream_delta(text)
                                 deltas_were_sent["yes"] = True
                         elif delta_type == "thinking_delta":
@@ -2237,6 +2238,7 @@ def interruptible_streaming_api_call(agent, api_kwargs: dict, *, on_first_delta=
                         result["response"] = _call_anthropic()
                     else:
                         result["response"] = _call_chat_completions()
+                    result["consecutive_stale"] = 0
                     return  # success
                 except Exception as e:
                     # If the main poll loop force-closed this request because
@@ -2583,9 +2585,30 @@ def interruptible_streaming_api_call(agent, api_kwargs: dict, *, on_first_delta=
             # Reset the timer so we don't kill repeatedly while
             # the inner thread processes the closure.
             last_chunk_time["t"] = time.time()
+            result["consecutive_stale"] += 1
             agent._touch_activity(
-                f"stale stream detected after {int(_stale_elapsed)}s, reconnecting"
+                f"stale stream detected after {int(_stale_elapsed)}s "
+                f"(consecutive={result['consecutive_stale']}), reconnecting"
             )
+            if result["consecutive_stale"] >= 2:
+                # Second consecutive stale event — provider is genuinely down,
+                # not just slow. Stop retrying the same endpoint and let the
+                # outer loop's fallback logic take over. (#43211)
+                result["error"] = TimeoutError(
+                    f"Provider stale for {int(_stale_elapsed)}s on both attempts "
+                    f"(consecutive_stale={result['consecutive_stale']}). "
+                    "Triggering provider fallback."
+                )
+                result["response"] = None
+                try:
+                    _close_request_client_once("stale_stream_escalate")
+                except Exception:
+                    pass
+                try:
+                    agent._replace_primary_openai_client(reason="stale_stream_escalate")
+                except Exception:
+                    pass
+                return
 
         if agent._interrupt_requested:
             # Mark THIS request cancelled before force-closing so the worker's
