@@ -1786,6 +1786,93 @@ async def get_system_stats():
 
 
 # ---------------------------------------------------------------------------
+# Health Monitor endpoints — crash detection, auto-recovery, gateway health.
+# ---------------------------------------------------------------------------
+
+
+@app.get("/api/health/detailed")
+async def get_detailed_health():
+    """Detailed health status including crash history and auto-recovery state.
+
+    Returns gateway process health, uptime, restart count, crash history,
+    and auto-recovery backoff state. Powers the Health Monitor dashboard
+    widget and the gateway crash-loop detection system.
+    """
+    try:
+        from health_monitor import HealthMonitor, HealthConfig
+
+        state_dir = Path(get_hermes_home()) / "health"
+        state_file = state_dir / "health_state.json"
+
+        health_data: Dict[str, Any] = {
+            "state": "unknown",
+            "uptime_seconds": 0,
+            "restart_count": 0,
+            "crash_count": 0,
+            "flap_detected": False,
+            "recent_crashes": [],
+        }
+
+        if state_file.exists():
+            try:
+                saved = json.loads(state_file.read_text())
+                metrics = saved.get("metrics", {})
+                health_data.update({
+                    "state": metrics.get("state", "unknown"),
+                    "uptime_seconds": metrics.get("uptime_seconds", 0),
+                    "restart_count": metrics.get("restart_count", 0),
+                    "crash_count": metrics.get("crash_count", 0),
+                    "flap_detected": metrics.get("flap_detected", False),
+                    "backoff_seconds": metrics.get("backoff_seconds", 0),
+                    "last_healthy_at": metrics.get("last_healthy_at"),
+                    "last_check_at": metrics.get("last_check_at"),
+                })
+                if metrics.get("last_crash"):
+                    health_data["last_crash"] = metrics["last_crash"]
+            except Exception:
+                pass
+
+        # Read recent crash history
+        crashes_file = state_dir / "crash_history.jsonl"
+        if crashes_file.exists():
+            try:
+                crashes = []
+                for line in crashes_file.read_text().strip().split("\n"):
+                    if line.strip():
+                        crashes.append(json.loads(line))
+                health_data["recent_crashes"] = crashes[-10:]
+            except Exception:
+                pass
+
+        # Current gateway process info
+        gateway_pid = get_running_pid()
+        health_data["gateway_pid"] = gateway_pid
+        health_data["gateway_running"] = gateway_pid is not None
+
+        return health_data
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Health check failed: {exc}")
+
+
+@app.post("/api/health/reset")
+async def reset_health_monitor():
+    """Reset health monitor state (clear crash history, reset backoff)."""
+    try:
+        state_dir = Path(get_hermes_home()) / "health"
+        state_file = state_dir / "health_state.json"
+        crashes_file = state_dir / "crash_history.jsonl"
+
+        if state_file.exists():
+            state_file.unlink()
+        if crashes_file.exists():
+            crashes_file.unlink()
+
+        return {"ok": True, "message": "Health monitor state reset"}
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Reset failed: {exc}")
+
+
+# ---------------------------------------------------------------------------
 # Curator endpoints — background skill-maintenance status + controls.
 #
 # The curator periodically reviews skills (archive stale, prune, pin).  The
