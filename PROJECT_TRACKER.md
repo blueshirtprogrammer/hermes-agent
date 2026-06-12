@@ -130,10 +130,10 @@
 **DATA LOSS (Must Fix Today):**
 6. ~~#44837~~ - Session DB drops assistant after compaction ✅ **FIXED + PUSHED**
 7. ~~#43066~~ - Context compaction truncating mid-turn ✅ **FIXED + PUSHED**
-8. #42449 - delegate_task context not passed
+8. ~~#42449~~ - delegate_task context corruption (shared singleton) ✅ **FIXED + PUSHED**
 9. ~~#44327~~ - Cached-agent cursor reset [already fixed in #44837 layer 1]
 10. #43211 - Token budget race at high concurrency
-11. #44585 - Cron inherits paid provider state during pause/stop
+11. ~~#44585~~ - Cron inherits paid provider state during pause/stop ✅ **FIXED + PUSHED**
 
 ### HIGH PRIORITY (Functionality)
 
