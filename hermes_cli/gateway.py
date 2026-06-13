@@ -3678,7 +3678,9 @@ def launchd_restart():
                     print(
                         f"⚠ Gateway drain timed out after {drain_timeout:.0f}s — forcing launchd restart"
                     )
-        subprocess.run(["launchctl", "kickstart", "-k", target], check=True, timeout=90)
+        # -p: re-read plist before restart. Required on macOS 26 where
+        # kickstart -k alone returns exit 5 if the plist changed and -p is absent.
+        subprocess.run(["launchctl", "kickstart", "-k", "-p", target], check=True, timeout=90)
         print("✓ Service restarted")
     except subprocess.CalledProcessError as e:
         if not _launchd_error_indicates_unloaded(e):

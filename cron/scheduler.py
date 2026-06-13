@@ -454,6 +454,14 @@ def _resolve_single_delivery_target(job: dict, deliver_value: str) -> Optional[d
                     "chat_id": chat_id,
                     "thread_id": _get_home_target_thread_id(platform_name),
                 }
+        # No origin and no home channel configured — surface a clear warning
+        # instead of silently returning None so operators know why delivery failed.
+        logger.warning(
+            "Job '%s' has deliver=origin but no origin recorded and no home "
+            "channel configured. Set HERMES_CRON_AUTO_DELIVER_<PLATFORM> or "
+            "create the job from a wired platform to enable origin delivery.",
+            job.get("name", job.get("id", "?")),
+        )
         return None
 
     if ":" in deliver_value:
@@ -527,7 +535,19 @@ def _normalize_deliver_value(deliver) -> str:
     if isinstance(deliver, (list, tuple)):
         parts = [str(p).strip() for p in deliver if str(p).strip()]
         return ",".join(parts) if parts else "local"
-    return str(deliver)
+    text = str(deliver).strip()
+    # Catch the Python list-literal form that sneaks in from direct API calls
+    # or hand-edited jobs.json: str(["origin"]) → "['origin']"
+    if text.startswith("[") or text.endswith("]"):
+        import ast
+        try:
+            parsed = ast.literal_eval(text)
+            if isinstance(parsed, (list, tuple)):
+                parts = [str(p).strip() for p in parsed if str(p).strip()]
+                return ",".join(parts) if parts else "local"
+        except (ValueError, SyntaxError):
+            pass
+    return text or "local"
 
 
 # Routing intent tokens — resolved at fire time, not create time, so a

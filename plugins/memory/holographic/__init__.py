@@ -251,6 +251,16 @@ class HolographicMemoryProvider(MemoryProvider):
                 logger.debug("Holographic memory_write mirror failed: %s", e)
 
     def shutdown(self) -> None:
+        # Close the SQLite connection explicitly before dropping the reference.
+        # Previously this just set self._store = None and relied on GC, which
+        # caused the connection's finalizer to run on a non-deterministic thread
+        # at a non-deterministic time — the fd-recycle race (#44037 / same
+        # class as #29507).  Explicit close pins the fd lifetime to this method.
+        if self._store is not None:
+            try:
+                self._store.close()
+            except Exception:
+                pass
         self._store = None
         self._retriever = None
 
