@@ -137,15 +137,17 @@
 
 ### HIGH PRIORITY (Functionality)
 
-11. #44037 - fd-recycle corruption in memory_store.db
+11. ~~#44037~~ - fd-recycle corruption in memory_store.db ✅ **FIXED + PUSHED**
 12. ~~#43842~~ - macOS plist refresh kills CLI before bootstrap ✅ **FIXED + PUSHED**
 13. ~~#43083~~ - Secret redaction breaks second tool call ✅ **FIXED + PUSHED**
 14. #42909 - Telegram DMs produce zero log output [WSL2/PTB polling compat]
-15. #42524 - macOS 26 launchctl exit 5 fallback
+15. ~~#42524~~ - macOS 26 launchctl exit 5 fallback ✅ **FIXED + PUSHED**
 16. ~~#44679~~ - Matrix gateway treats DM as group ✅ **FIXED + PUSHED**
 17. #42875 - memory drift guard rejects valid writes after external disk changes
 18. ~~#42874~~ - memory refuses legitimate appends (drift guard over-reach) ✅ **FIXED + PUSHED**
 19. #42810 - OpenAI compatible endpoint fails on Python 3.11 [httpx/httpcore compat — NOT a Hermes bug; Python 3.14 works]
+20. ~~#44710~~ - Auth token refresh uses wrong domain ✅ **ALREADY CORRECT** (portal.nousresearch.com already in codebase)
+21. ~~#43014~~ - cron deliver=origin fails to resolve delivery target ✅ **FIXED + PUSHED**
 
 ---
 
