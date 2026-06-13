@@ -621,9 +621,15 @@ def run_conversation(
             # with target="user_message" (the default).  Both are
             # API-call-time only — the original message in `messages` is
             # never mutated, so nothing leaks into session persistence.
+            #
+            # SECURITY: Skip memory-context injection for customer-facing
+            # platforms (whatsapp, telegram, discord, slack) to prevent
+            # operator-side Honcho recall from leaking to end customers.
+            # This is a prompt-injection surface (Greshake et al. 2023).
             if idx == current_turn_user_idx and msg.get("role") == "user":
                 _injections = []
-                if _ext_prefetch_cache:
+                _customer_facing = agent.platform in ("whatsapp", "telegram", "discord", "slack")
+                if _ext_prefetch_cache and not _customer_facing:
                     _fenced = build_memory_context_block(_ext_prefetch_cache)
                     if _fenced:
                         _injections.append(_fenced)

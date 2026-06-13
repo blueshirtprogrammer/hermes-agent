@@ -289,8 +289,19 @@ def _find_bash() -> str:
     )
 
 
-# Backward compat — process_registry.py imports this name
-_find_shell = _find_bash
+def _find_shell() -> str:
+    """Find the user's preferred shell for command execution.
+
+    On non-Windows (macOS/Linux), prefer the user's login shell ($SHELL)
+    over the system bash. This avoids the bash 3.2 login-shell issue on
+    macOS where bash -lic tries to source ~/.bash_profile which often
+    redirects to zsh, causing the -c argument to be lost.
+    """
+    if not _IS_WINDOWS:
+        user_shell = os.environ.get("SHELL")
+        if user_shell and os.path.isfile(user_shell):
+            return user_shell
+    return _find_bash()
 
 
 # Standard PATH entries for environments with minimal PATH.
